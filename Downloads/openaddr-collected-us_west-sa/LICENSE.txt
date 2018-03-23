@@ -1,0 +1,6 @@
+Data collected by OpenAddresses (http://openaddresses.io).
+
+us/or/portland_metro
+Website: Unknown
+License: Open Database License (ODbL) v1.0 (http://www.oregonmetro.gov/sites/default/files/Open_Database_and_Content_Licenses.pdf)
+Required attribution: Oregon Metro
