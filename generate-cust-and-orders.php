@@ -1,9 +1,11 @@
 <?php
 
+date_default_timezone_set('America/Denver');
 
 $g = new Generate();
-$g->generateData();
-
+foreach ( range(1,10) as $iter ) {
+  $g->generateData($iter);
+}
 
 ///  Test Distribution
 // $a = [];
@@ -17,44 +19,74 @@ $g->generateData();
 
 class Generate {
 
-  public function generateData() {
+  public function generateData($iter) {
+
+    $db = new PDO("mysql:host=192.168.99.101;port=5210;dbname=classicmodels",'root','password');
 
     shuffle($this->prods);
     shuffle($this->fnames);
     shuffle($this->lnames);
+    shuffle($this->employees);
 
-    $tot = 786769;
+    list($cust_num) = $db->query("SELECT MAX(customerNumber) FROM customers")->fetch();
+    list($order_num) = $db->query("SELECT MAX(orderNumber) FROM orders")->fetch();
 
-    $tot_orders = 0;
-    for ( $i = 0 ; $i < $tot ; $i++ ) {
-      echo $i .' - ';
+    $tot = 786254;
+
+    for ( $i = 1 ; $i < $tot ; $i++ ) {
       $num_orders = $this->getSkewedThingCountByDataPosition($i/$tot);
+
+      $addr_id = rand(1,$tot);
 
       $fname = $this->skewedRandArrayItem($this->fnames);
       $lname = $this->skewedRandArrayItem($this->lnames);
+      $cust_num++;
 
       $sql = "INSERT INTO `customers` (`customerNumber`, `customerName`, `contactLastName`, `contactFirstName`, `phone`, `addressLine1`, `addressLine2`, `city`, `state`, `postalCode`, `country`, `salesRepEmployeeNumber`, `creditLimit`)
-      VALUES (103,'Atelier Graphique','Schmitt','Carine ','40.32.2555','54, rue Royale',NULL,'Nantes',NULL,'44000','France',1370,21000.00)
-      ";
-
+      VALUES (". $cust_num .",
+          ". $db->quote($fname .' '. $lname) .",
+          ". $db->quote($fname) .",
+          ". $db->quote($lname) .",
+          '801-555-5555',
+          (SELECT CONCAT(number,' ',street) FROM mass_data_test.import_addr WHERE idx = $addr_id),
+          (SELECT unit                      FROM mass_data_test.import_addr WHERE idx = $addr_id),
+          'Portland',
+          'OR',
+          (SELECT postcode                  FROM mass_data_test.import_addr WHERE idx = $addr_id),
+          'USA',
+          ". (int) $this->skewedRandArrayItem($this->employees) .",
+          ". $this->skewedRandom(100000) .")
+          ";
+      $db->query($sql);
 
       $tot_orders += floor($num_orders);
-      echo sprintf("%.2f",$num_orders) ." (". number_format($tot_orders) .") [". $this->skewedRandArrayItem($this->prods) ." -  ". $fname ." ". $lname ."]\n";
+      echo $iter ." --> $i - ". sprintf("%.2f",$num_orders) ." (". number_format($tot_orders) .")\n"; // [". $this->skewedRandArrayItem($this->prods) ." -  ". $fname ." ". $lname ."]\n";
 
       foreach ( range(1,$num_orders) as $x ) {
+        $order_num++;
 
 
+        $date = "'".date('Y-m-d', time() - (rand(1,365 * 5) * 86400)) . "'";
         $sql = "INSERT INTO `orders` (`orderNumber`, `orderDate`, `requiredDate`, `shippedDate`, `status`, `comments`, `customerNumber`)
-        VALUES (10100,'2003-01-06','2003-01-13','2003-01-10','Shipped',NULL,363)
-        ";
+                VALUES ($order_num,$date,$date,$date,'Shipped',NULL,$cust_num)
+                ";
+        $db->query($sql);
+        // echo "$sql\n"; exit;
 
+        $prods = [];
+        $num_prods = $this->skewedRandom(15)+1;
+        while ( count($prods) < $num_prods ) {
+          $prods[ $this->skewedRandArrayItem($this->prods) ] = 1;
+        }
+        $prods = array_keys($prods);
 
-        foreach (range(1,$this->skewedRandom(15)+1) as $prod_x ) {
-
+        foreach ( $prods as $prod_x => $prod_id ) {
           $sql = "INSERT INTO `orderdetails` (`orderNumber`, `productCode`, `quantityOrdered`, `priceEach`, `orderLineNumber`)
           VALUES
-            (10100,'S18_1749',30,136.00,3)
+            ($order_num,". $db->quote($prod_id) .",". ($this->skewedRandom(24)+1) .",". ($this->skewedRandom(100000)/100) .",$prod_x)
             ";
+          // echo "$sql\n"; exit;
+          $db->query($sql);
 
         }
 
@@ -91,6 +123,8 @@ class Generate {
 
   // DATA 
     public $prods = ['S10_1678','S10_1949','S10_2016','S10_4698','S10_4757','S10_4962','S12_1099','S12_1108','S12_1666','S12_2823','S12_3148','S12_3380','S12_3891','S12_3990','S12_4473','S12_4675','S18_1097','S18_1129','S18_1342','S18_1367','S18_1589','S18_1662','S18_1749','S18_1889','S18_1984','S18_2238','S18_2248','S18_2319','S18_2325','S18_2432','S18_2581','S18_2625','S18_2795','S18_2870','S18_2949','S18_2957','S18_3029','S18_3136','S18_3140','S18_3232','S18_3233','S18_3259','S18_3278','S18_3320','S18_3482','S18_3685','S18_3782','S18_3856','S18_4027','S18_4409','S18_4522','S18_4600','S18_4668','S18_4721','S18_4933','S24_1046','S24_1444','S24_1578','S24_1628','S24_1785','S24_1937','S24_2000','S24_2011','S24_2022','S24_2300','S24_2360','S24_2766','S24_2840','S24_2841','S24_2887','S24_2972','S24_3151','S24_3191','S24_3371','S24_3420','S24_3432','S24_3816','S24_3856','S24_3949','S24_3969','S24_4048','S24_4258','S24_4278','S24_4620','S32_1268','S32_1374','S32_2206','S32_2509','S32_3207','S32_3522','S32_4289','S32_4485','S50_1341','S50_1392','S50_1514','S50_4713','S700_1138','S700_1691','S700_1938','S700_2047','S700_2466','S700_2610','S700_2824','S700_2834','S700_3167','S700_3505','S700_3962','S700_4002','S72_1253','S72_3212'];
+
+    public $employees = [1002,1056,1076,1088,1102,1143,1165,1166,1188,1216,1286,1323,1337,1370,1401,1501,1504,1611,1612,1619,1621,1625,1702];
 
     public $fnames = ['Aaron','Abdul','Abe','Abel','Abraham','Abram','Adalberto','Adam','Adan','Adolfo','Adolph','Adrian','Agustin','Ahmad','Ahmed','Al','Alan','Albert','Alberto','Alden','Aldo','Alec','Alejandro','Alex','Alexander','Alexis','Alfonso','Alfonzo','Alfred','Alfredo','Ali','Allan','Allen','Alonso','Alonzo','Alphonse','Alphonso','Alton','Alva','Alvaro','Alvin','Amado','Ambrose','Amos','Anderson','Andre','Andrea','Andreas','Andres','Andrew','Andy','Angel','Angelo','Anibal','Anthony','Antione','Antoine','Anton','Antone','Antonia','Antonio','Antony','Antwan','Archie','Arden','Ariel','Arlen','Arlie','Armand','Armando','Arnold','Arnoldo','Arnulfo','Aron','Arron','Art','Arthur','Arturo','Asa','Ashley','Aubrey','August','Augustine','Augustus','Aurelio','Austin','Avery','Barney','Barrett','Barry','Bart','Barton','Basil','Beau','Ben','Benedict','Benito','Benjamin','Bennett','Bennie','Benny','Benton','Bernard','Bernardo','Bernie','Berry','Bert','Bertram','Bill','Billie','Billy','Blaine','Blair','Blake','Bo','Bob','Bobbie','Bobby','Booker','Boris','Boyce','Boyd','Brad','Bradford','Bradley','Bradly','Brady','Brain','Branden','Brandon','Brant','Brendan','Brendon','Brent','Brenton','Bret','Brett','Brian','Brice','Britt','Brock','Broderick','Brooks','Bruce','Bruno','Bryan','Bryant','Bryce','Bryon','Buck','Bud','Buddy','Buford','Burl','Burt','Burton','Buster','Byron','Caleb','Calvin','Cameron','Carey','Carl','Carlo','Carlos','Carlton','Carmelo','Carmen','Carmine','Carol','Carrol','Carroll','Carson','Carter','Cary','Casey','Cecil','Cedric','Cedrick','Cesar','Chad','Chadwick','Chance','Chang','Charles','Charley','Charlie','Chas','Chase','Chauncey','Chester','Chet','Chi','Chong','Chris','Christian','Christoper','Christopher','Chuck','Chung','Clair','Clarence','Clark','Claud','Claude','Claudio','Clay','Clayton','Clement','Clemente','Cleo','Cletus','Cleveland','Cliff','Clifford','Clifton','Clint','Clinton','Clyde','Cody','Colby','Cole','Coleman','Colin','Collin','Colton','Columbus','Connie','Conrad','Cordell','Corey','Cornelius','Cornell','Cortez','Cory','Courtney','Coy','Craig','Cristobal','Cristopher','Cruz','Curt','Curtis','Cyril','Cyrus','Dale','Dallas','Dalton','Damian','Damien','Damion','Damon','Dan','Dana','Dane','Danial','Daniel','Danilo','Dannie','Danny','Dante','Darell','Daren','Darin','Dario','Darius','Darnell','Daron','Darrel','Darrell','Darren','Darrick','Darrin','Darron','Darryl','Darwin','Daryl','Dave','David','Davis','Dean','Deandre','Deangelo','Dee','Del','Delbert','Delmar','Delmer','Demarcus','Demetrius','Denis','Dennis','Denny','Denver','Deon','Derek','Derick','Derrick','Deshawn','Desmond','Devin','Devon','Dewayne','Dewey','Dewitt','Dexter','Dick','Diego','Dillon','Dino','Dion','Dirk','Domenic','Domingo','Dominic','Dominick','Dominique','Don','Donald','Dong','Donn','Donnell','Donnie','Donny','Donovan','Donte','Dorian','Dorsey','Doug','Douglas','Douglass','Doyle','Drew','Duane','Dudley','Duncan','Dustin','Dusty','Dwain','Dwayne','Dwight','Dylan','Earl','Earle','Earnest','Ed','Eddie','Eddy','Edgar','Edgardo','Edison','Edmond','Edmund','Edmundo','Eduardo','Edward','Edwardo','Edwin','Efrain','Efren','Elbert','Elden','Eldon','Eldridge','Eli','Elias','Elijah','Eliseo','Elisha','Elliot','Elliott','Ellis','Ellsworth','Elmer','Elmo','Eloy','Elroy','Elton','Elvin','Elvis','Elwood','Emanuel','Emerson','Emery','Emil','Emile','Emilio','Emmanuel','Emmett','Emmitt','Emory','Enoch','Enrique','Erasmo','Eric','Erich','Erick','Erik','Erin','Ernest','Ernesto','Ernie','Errol','Ervin','Erwin','Esteban','Ethan','Eugene','Eugenio','Eusebio','Evan','Everett','Everette','Ezekiel','Ezequiel','Ezra','Fabian','Faustino','Fausto','Federico','Felipe','Felix','Felton','Ferdinand','Fermin','Fernando','Fidel','Filiberto','Fletcher','Florencio','Florentino','Floyd','Forest','Forrest','Foster','Frances','Francesco','Francis','Francisco','Frank','Frankie','Franklin','Franklyn','Fred','Freddie','Freddy','Frederic','Frederick','Fredric','Fredrick','Freeman','Fritz','Gabriel','Gail','Gale','Galen','Garfield','Garland','Garret','Garrett','Garry','Garth','Gary','Gaston','Gavin','Gayle','Gaylord','Genaro','Gene',
     'Geoffrey','George','Gerald','Geraldo','Gerard','Gerardo','German','Gerry','Gil','Gilbert','Gilberto','Gino','Giovanni','Giuseppe','Glen','Glenn','Gonzalo','Gordon','Grady','Graham','Graig','Grant','Granville','Greg','Gregg','Gregorio','Gregory','Grover','Guadalupe','Guillermo','Gus','Gustavo','Guy','Hai','Hal','Hank','Hans','Harlan','Harland','Harley','Harold','Harris','Harrison','Harry','Harvey','Hassan','Hayden','Haywood','Heath','Hector','Henry','Herb','Herbert','Heriberto','Herman','Herschel','Hershel','Hilario','Hilton','Hipolito','Hiram','Hobert','Hollis','Homer','Hong','Horace','Horacio','Hosea','Houston','Howard','Hoyt','Hubert','Huey','Hugh','Hugo','Humberto','Hung','Hunter','Hyman','Ian','Ignacio','Ike','Ira','Irvin','Irving','Irwin','Isaac','Isaiah','Isaias','Isiah','Isidro','Ismael','Israel','Isreal','Issac','Ivan','Ivory','Jacinto','Jack','Jackie','Jackson','Jacob','Jacques','Jae','Jaime','Jake','Jamaal','Jamal','Jamar','Jame','Jamel','James','Jamey','Jamie','Jamison','Jan','Jared','Jarod','Jarred','Jarrett','Jarrod','Jarvis','Jason','Jasper','Javier','Jay','Jayson','Jc','Jean','Jed','Jeff','Jefferey','Jefferson','Jeffery','Jeffrey','Jeffry','Jerald','Jeramy','Jere','Jeremiah','Jeremy','Jermaine','Jerold','Jerome','Jeromy','Jerrell','Jerrod','Jerrold','Jerry','Jess','Jesse','Jessie','Jesus','Jewel','Jewell','Jim','Jimmie','Jimmy','Joan','Joaquin','Jody','Joe','Joel','Joesph','Joey','John','Johnathan','Johnathon','Johnie','Johnnie','Johnny','Johnson','Jon','Jonah','Jonas','Jonathan','Jonathon','Jordan','Jordon','Jorge','Jose','Josef','Joseph','Josh','Joshua','Josiah','Jospeh','Josue','Juan','Jude','Judson','Jules','Julian','Julio','Julius','Junior','Justin','Kareem','Karl','Kasey','Keenan','Keith','Kelley','Kelly','Kelvin','Ken','Kendall','Kendrick','Keneth','Kenneth','Kennith','Kenny','Kent','Kenton','Kermit','Kerry','Keven','Kevin','Kieth','Kim','King','Kip','Kirby','Kirk','Korey','Kory','Kraig','Kris','Kristofer','Kristopher','Kurt','Kurtis','Kyle','Lacy','Lamar','Lamont','Lance','Landon','Lane','Lanny','Larry','Lauren','Laurence','Lavern','Laverne','Lawerence','Lawrence','Lazaro','Leandro','Lee','Leif','Leigh','Leland','Lemuel','Len','Lenard','Lenny','Leo','Leon','Leonard','Leonardo','Leonel','Leopoldo','Leroy','Les','Lesley','Leslie','Lester','Levi','Lewis','Lincoln','Lindsay','Lindsey','Lino','Linwood','Lionel','Lloyd','Logan','Lon','Long','Lonnie','Lonny','Loren','Lorenzo','Lou','Louie','Louis','Lowell','Loyd','Lucas','Luciano','Lucien','Lucio','Lucius','Luigi','Luis','Luke','Lupe','Luther','Lyle','Lyman','Lyndon','Lynn','Lynwood','Mac','Mack','Major','Malcolm','Malcom','Malik','Man','Manual','Manuel','Marc','Marcel','Marcelino','Marcellus','Marcelo','Marco','Marcos','Marcus','Margarito','Maria','Mariano','Mario','Marion','Mark','Markus','Marlin','Marlon','Marquis','Marshall','Martin','Marty','Marvin','Mary','Mason','Mathew','Matt','Matthew','Maurice','Mauricio','Mauro','Max','Maximo','Maxwell','Maynard','Mckinley','Mel','Melvin','Merle','Merlin','Merrill','Mervin','Micah','Michael','Michal','Michale','Micheal','Michel','Mickey','Miguel','Mike','Mikel','Milan','Miles','Milford','Millard','Milo','Milton','Minh','Miquel','Mitch','Mitchel','Mitchell','Modesto','Mohamed','Mohammad','Mohammed','Moises','Monroe','Monte','Monty','Morgan','Morris','Morton','Mose','Moses','Moshe','Murray','Myles','Myron','Napoleon','Nathan','Nathanael','Nathanial','Nathaniel','Neal','Ned','Neil','Nelson','Nestor','Neville','Newton','Nicholas','Nick','Nickolas','Nicky','Nicolas','Nigel','Noah','Noble','Noe','Noel','Nolan','Norbert','Norberto','Norman','Normand','Norris','Numbers','Octavio','Odell','Odis','Olen','Olin','Oliver','Ollie','Omar','Omer','Oren','Orlando','Orval','Orville','Oscar','Osvaldo','Oswaldo','Otha','Otis','Otto','Owen','Pablo','Palmer','Paris','Parker','Pasquale','Pat','Patricia','Patrick','Paul','Pedro','Percy','Perry','Pete','Peter','Phil','Philip','Phillip','Pierre','Porfirio','Porter','Preston','Prince',
