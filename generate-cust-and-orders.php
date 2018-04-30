@@ -21,7 +21,7 @@ class Generate {
 
   public function generateData($iter) {
 
-    $db = new PDO("mysql:host=192.168.99.101;port=5210;dbname=classicmodels",'root','password');
+    $db = new PDO("mysql:host=localhost;port=5210;dbname=classicmodels",'yourusername','your-p@ssword');
 
     shuffle($this->prods);
     shuffle($this->fnames);

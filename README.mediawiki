@@ -1,0 +1,38 @@
+==  How I assembled the Sample Dataset ==
+
+# Connect to SequelPro (As root):
+# Download Sample MySQL Database from:
+#* http://www.mysqltutorial.org/mysql-sample-database.aspx
+# make import_addr table by uploading data from:
+#* https://results.openaddresses.io/
+#* I did the us_west-sa.zip
+#* inside there I did us/or/portland_metro.csv
+#* I used SequelPro to do the mass-import
+# Patch to add a sequential Primary Key (after you have imported the data, usually works best):
+<pre>
+ALTER TABLE `import_addr` DROP `id`;
+ALTER TABLE `import_addr` ADD `idx` INT(11) UNSIGNED  NOT NULL  AUTO_INCREMENT  PRIMARY KEY FIRST;
+</pre>
+
+=== Running the Script to populate dummy orders and customers ===
+
+# Modify the DB connection line
+# Each time it runs, it will insert:
+## 786,254 customers (with random-skewed first/last name)
+## A skewed random number of orders (most of the time 1, but up to 80-200 on a few customers)
+## Order dates evenly distriubuted over the last 5 years
+## Between 1 and 15 line items per order (skewed low)
+## Choice of random product Skewed, so some products will have 80,000+ and others only < 100
+# I ran it about 10 times
+
+<pre>
+php ./generate-cust-and-orders.php
+</pre>
+
+
+
+== OR, just download the pre-generated data-set I made, here ==
+
+http://joesvolcano.net/classicmodels-large-data.sql.gz
+
+(Has about 4.7 GB of data)
