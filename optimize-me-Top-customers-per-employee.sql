@@ -13,7 +13,7 @@ JOIN customers    c ON (c.salesRepEmployeeNumber = e.employeeNumber)
 JOIN orders       o USING (customerNumber)
 JOIN orderdetails d USING (orderNumber)
 WHERE e.email = 'abow@classicmodelcars.com'
-  AND o.orderDate > DATE_SUB(NOW(), INTERVAL 90 DAY)
+  AND o.orderDate > DATE_SUB('2018-03-25', INTERVAL 90 DAY)
 GROUP BY customerNumber
 ORDER BY COUNT(DISTINCT orderNumber) DESC, customerNumber
 LIMIT 100
@@ -31,7 +31,7 @@ FROM customers    c
 JOIN orders       o USING (customerNumber)
 JOIN orderdetails d USING (orderNumber)
 WHERE c.salesRepEmployeeNumber = 1143
-  AND o.orderDate > DATE_SUB(NOW(), INTERVAL 90 DAY)
+  AND o.orderDate > DATE_SUB('2018-03-25', INTERVAL 90 DAY)
 GROUP BY customerNumber
 ORDER BY COUNT(DISTINCT orderNumber) DESC, customerNumber
 LIMIT 100
@@ -52,7 +52,7 @@ JOIN customers    c ON (c.salesRepEmployeeNumber = e.employeeNumber)
 JOIN orders       o USING (customerNumber)
 JOIN orderdetails d USING (orderNumber)
 WHERE e.email = 'abow@classicmodelcars.com'
-  AND o.orderDate > DATE_SUB(NOW(), INTERVAL 90 DAY)
+  AND o.orderDate > DATE_SUB('2018-03-25', INTERVAL 90 DAY)
 GROUP BY customerNumber
 ORDER BY COUNT(DISTINCT orderNumber) DESC, customerNumber
 LIMIT 100
@@ -71,7 +71,7 @@ FROM customers    c
 JOIN orders       o USING (customerNumber) USE INDEX (orderDate)
 JOIN orderdetails d USING (orderNumber)
 WHERE c.salesRepEmployeeNumber = 1143
-  AND o.orderDate > DATE_SUB(NOW(), INTERVAL 90 DAY)
+  AND o.orderDate > DATE_SUB('2018-03-25', INTERVAL 90 DAY)
 GROUP BY customerNumber
 ORDER BY COUNT(DISTINCT orderNumber) DESC, customerNumber
 LIMIT 100
@@ -95,8 +95,8 @@ FROM customers    c
 JOIN orders       o USING (customerNumber)
 JOIN orderdetails d USING (orderNumber)
 WHERE c.salesRepEmployeeNumber = 1143
-  AND c.lastOrder > DATE_SUB(NOW(), INTERVAL 90 DAY)
-  AND o.orderDate > DATE_SUB(NOW(), INTERVAL 90 DAY)
+  AND c.lastOrder > DATE_SUB('2018-03-25', INTERVAL 90 DAY)
+  AND o.orderDate > DATE_SUB('2018-03-25', INTERVAL 90 DAY)
 GROUP BY customerNumber
 ORDER BY COUNT(DISTINCT orderNumber) DESC, customerNumber
 LIMIT 100
@@ -120,8 +120,8 @@ SELECT customerNumber, contactFirstName, contactLastName,
 FROM customers    c
 JOIN orders       o USING (customerNumber)
 WHERE c.salesRepEmployeeNumber = 1143
-  AND c.lastOrder > DATE_SUB(NOW(), INTERVAL 90 DAY)
-  AND o.orderDate > DATE_SUB(NOW(), INTERVAL 90 DAY)
+  AND c.lastOrder > DATE_SUB('2018-03-25', INTERVAL 90 DAY)
+  AND o.orderDate > DATE_SUB('2018-03-25', INTERVAL 90 DAY)
 GROUP BY customerNumber
 ORDER BY COUNT(DISTINCT orderNumber) DESC, customerNumber
 LIMIT 100
@@ -142,8 +142,8 @@ FROM customers    c
 JOIN orders       o USING (customerNumber)
 JOIN orderdetails d USING (orderNumber)
 WHERE c.salesRepEmployeeNumber = 1143
-  AND c.lastOrder > DATE_SUB(NOW(), INTERVAL 90 DAY)
-  AND o.orderDate > DATE_SUB(NOW(), INTERVAL 90 DAY)
+  AND c.lastOrder > DATE_SUB('2018-03-25', INTERVAL 90 DAY)
+  AND o.orderDate > DATE_SUB('2018-03-25', INTERVAL 90 DAY)
 GROUP BY customerNumber
 ORDER BY COUNT(DISTINCT orderNumber) DESC, customerNumber
 LIMIT 100
@@ -162,8 +162,8 @@ JOIN customers    c ON (c.salesRepEmployeeNumber = e.employeeNumber)
 JOIN orders       o USING (customerNumber)
 JOIN orderdetails d USING (orderNumber)
 WHERE e.email = 'abow@classicmodelcars.com'
-  AND c.lastOrder > DATE_SUB(NOW(), INTERVAL 90 DAY)
-  AND o.orderDate > DATE_SUB(NOW(), INTERVAL 90 DAY)
+  AND c.lastOrder > DATE_SUB('2018-03-25', INTERVAL 90 DAY)
+  AND o.orderDate > DATE_SUB('2018-03-25', INTERVAL 90 DAY)
 GROUP BY customerNumber
 ORDER BY COUNT(DISTINCT orderNumber) DESC, customerNumber
 LIMIT 100
@@ -184,8 +184,8 @@ JOIN orders       o USING (customerNumber)
 JOIN orderdetails d USING (orderNumber)
 WHERE c.salesRepEmployeeNumber =
     (SELECT employeeNumber FROM employees WHERE email = 'abow@classicmodelcars.com')
-  AND c.lastOrder > DATE_SUB(NOW(), INTERVAL 90 DAY)
-  AND o.orderDate > DATE_SUB(NOW(), INTERVAL 90 DAY)
+  AND c.lastOrder > DATE_SUB('2018-03-25', INTERVAL 90 DAY)
+  AND o.orderDate > DATE_SUB('2018-03-25', INTERVAL 90 DAY)
 GROUP BY customerNumber
 ORDER BY COUNT(DISTINCT orderNumber) DESC, customerNumber
 LIMIT 100
